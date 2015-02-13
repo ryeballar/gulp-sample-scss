@@ -2,7 +2,7 @@ var gulp = require('gulp'),
 	sass = require('gulp-sass'),
 	autoprefixer = require('gulp-autoprefixer');
 
-gulp.task('james', function() {
+gulp.task('scss', function() {
 	return gulp.src('assets/scss/*.scss')
 		.pipe(sass())
 		.on('error', function handleError(err) {
