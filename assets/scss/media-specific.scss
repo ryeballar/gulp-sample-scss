@@ -1,0 +1,136 @@
+@import "../../bower_components/bootstrap-sass-official/assets/stylesheets/_bootstrap.scss";
+
+$em-sizes: (
+	none:           none,
+	zero: 			0,
+	zero-auto:      #{0 auto},
+	zero-small: 	0.25em,
+	small: 			0.5em,
+	small-normal: 	0.75em,
+	normal: 		1em,
+	normal-medium: 	1.25em,_
+	medium: 		1.5em,
+	medium-large: 	1.75em,
+	large: 			2em
+);
+
+$em-properties:
+	padding, padding-top, padding-right, padding-bottom, padding-left,
+	margin, margin-top, margin-right, margin-bottom, margin-left, border,
+	border-width, border-top-width, border-left-width, border-right-width, border-bottom-width,
+	font-size, border-radius, min-height;
+
+$std-properties: (
+	text-align: 	(left, center, right),
+	display: 		(block, inline, inline-block, none)
+);
+
+$medias: (
+	zz: 		(min: 0, 			max: $screen-xs - 1),
+	xs: 		(min: $screen-xs, 	max: $screen-xs-max),
+	sm: 		(min: $screen-sm, 	max: $screen-sm-max),
+	md: 		(min: $screen-md, 	max: $screen-md-max),
+	lg:  		(min: $screen-lg)
+);
+
+@function has-value($value) {
+	@return $value != null and $value != 0;
+}
+
+@mixin media-css-property-helper($property, $values, $media-key, $media-range) {
+	$min: map-get($media-range, min);
+	$max: map-get($media-range, max);
+
+	@if(has-value($min) and has-value($max)) {
+		@media only screen and (min-width: $min) and (max-width: $max) {
+			@include css-property($property, $values, $media-key);
+		}
+	}
+
+	@else if(has-value($min)) {
+		@media only screen and (min-width: $min) {
+			@include css-property($property, $values, $media-key);
+		}
+	}
+
+	@else if(has-value($max)) {
+		@media only screen and (max-width: $max) {
+			@include css-property($property, $values, $media-key);
+		}
+	}
+
+	@else {
+		@include css-property($property, $values, $media-key);
+	}
+}
+
+@mixin media-css-property($property, $values) {
+
+	$media-keys: map-keys($medias);
+	$length: length($media-keys);
+	$j: 1;
+
+	@while $j <= $length {
+
+		$start-media-key: nth($media-keys, $j);
+
+		$start-media-range: map-get($medias, $start-media-key);
+
+		@include media-css-property-helper($property, $values, $start-media-key, $start-media-range);
+
+		$i: $j + 1;
+		@while($i <= $length) {
+
+			$end-media-key: nth($media-keys, $i);
+			$end-media-range: map-get($medias, $end-media-key);
+
+			@include media-css-property-helper(
+				$property,
+				$values,
+				#{$start-media-key}-#{$end-media-key},
+				(
+					min: map-get($start-media-range, min),
+					max: map-get($end-media-range, max)
+				)
+			);
+			$i: $i + 1;
+		}
+		$j: $j + 1;
+
+	}
+
+	@include css-property($property, $values);
+
+}
+
+@mixin css-property($property, $values, $media: null) {
+	@each $key, $value in $values {
+		@if($media) {
+			.#{$property}-#{$key}-#{$media} {
+				#{$property}: $value !important;
+			}
+		}
+
+		@else {
+			.#{$property}-#{$key} {
+				#{$property}: $value;
+			}
+		}
+	}
+}
+
+
+@each $em-property in $em-properties {
+	@include media-css-property($em-property, $em-sizes);
+}
+
+@each $property, $property-values in $std-properties {
+	$values: ();
+
+	@each $value in $property-values {
+		$values: map-merge($values, ($value: $value));
+	}
+
+	@include media-css-property($property, $values);
+}
+
